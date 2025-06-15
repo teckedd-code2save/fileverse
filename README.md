@@ -120,6 +120,7 @@ The frontend will be available at `http://localhost:4200`
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+
 ## Acknowledgments
 
 - Angular team for the amazing framework
