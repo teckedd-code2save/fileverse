@@ -1,0 +1,31 @@
+<div class="upload-container" 
+     (dragover)="onDragOver($event)"
+     (dragleave)="onDragLeave($event)"
+     (drop)="onDrop($event)"
+     [class.drag-over]="isDragging">
+  <div class="upload-content">
+    <i class="fas fa-cloud-upload-alt"></i>
+    <h3>Drag & Drop Files Here</h3>
+    <p>or</p>
+    <input type="file" 
+           #fileInput 
+           (change)="onFileSelected($event)"
+           style="display: none">
+    <button class="pill-button" (click)="onBrowseClick()">
+      <i class="fas fa-folder-open"></i>
+      Browse Files
+    </button>
+  </div>
+</div>
+
+<div class="upload-progress" *ngIf="uploadingFiles.length > 0">
+  <div class="progress-item" *ngFor="let file of uploadingFiles">
+    <div class="file-info">
+      <span class="filename">{{ file.name }}</span>
+      <span class="progress-text">{{ file.progress }}%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress" [style.width.%]="file.progress"></div>
+    </div>
+  </div>
+</div> 
