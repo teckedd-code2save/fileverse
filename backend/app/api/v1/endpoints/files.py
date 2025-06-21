@@ -22,8 +22,8 @@ async def upload_file(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/list", response_model=List[FileResponseSchema])
-async def list_files():
+@router.get("/search", response_model=List[FileResponseSchema])
+async def search_files(query: str="", page: int = 1, size: int = 10):
     """
     List all files in the S3 bucket
     """
@@ -59,24 +59,19 @@ async def delete_file(file_key: str):
     except Exception as e:
         raise HTTPException(status_code=404, detail="File not found")
 
-@router.get("/search")
-async def search_files(query: str, page: int = 1, size: int = 10):
-    try:
-        return await search_service.search_files(query, page=page, size=size)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/{file_id}")
 async def get_file(file_id: str):
     try:
-        return await search_service.get_file_metadata(file_id)
+        return await s3_service.get_file_metadata(file_id)
     except Exception as e:
         raise HTTPException(status_code=404, detail="File not found")
 
 @router.delete("/{file_id}")
 async def delete_file_index(file_id: str):
     try:
-        await search_service.delete_index(file_id)
+        await s3_service.delete_index(file_id)
         return {"message": "File deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 

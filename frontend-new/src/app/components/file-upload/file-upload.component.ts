@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FileService } from '../../services/file.service';
 import { HttpEventType, HttpEvent } from '@angular/common/http';
 
+
 @Component({
   selector: 'app-file-upload',
   standalone: true,
@@ -118,6 +119,8 @@ import { HttpEventType, HttpEvent } from '@angular/common/http';
 })
 export class FileUploadComponent {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
+
   private fileService = inject(FileService);
   isDragging = false;
   uploadingFiles: Array<{ name: string; progress: number }> = [];
