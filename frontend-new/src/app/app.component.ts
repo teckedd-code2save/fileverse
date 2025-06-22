@@ -20,14 +20,11 @@ import {
       </header>
       
       <main>
-        <div class="actions">
-          <button (click)="openBottomSheet()" class="upload-button">
-            <i class="fas" [class.fa-upload]="!showUpload" [class.fa-times]="showUpload"></i>
-          </button>
-        </div>
+        
+        <app-file-upload></app-file-upload>
 
-        <!-- <app-file-upload *ngIf="showUpload"></app-file-upload> -->
         <app-gallery></app-gallery>
+
       </main>
     </div>
   `,
@@ -90,11 +87,7 @@ import {
   `]
 })
 export class AppComponent {
-  showUpload = true;
+  showUpload = false;
 
-  private _bottomSheet = inject(MatBottomSheet);
-
-  openBottomSheet(): void {
-    this._bottomSheet.open(FileUploadComponent);
-  }
+ 
 } 

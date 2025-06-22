@@ -10,7 +10,8 @@
     <input type="file" 
            #fileInput 
            (change)="onFileSelected($event)"
-           style="display: none">
+           style="display: none"
+           multiple>
     <button class="pill-button" (click)="onBrowseClick()">
       <i class="fas fa-folder-open"></i>
       Browse Files
@@ -19,13 +20,25 @@
 </div>
 
 <div class="upload-progress" *ngIf="uploadingFiles.length > 0">
-  <div class="progress-item" *ngFor="let file of uploadingFiles">
+  <div class="progress-item" *ngFor="let upload of uploadingFiles; trackBy: trackByFileName">
     <div class="file-info">
-      <span class="filename">{{ file.name }}</span>
-      <span class="progress-text">{{ file.progress }}%</span>
+      <span class="filename">{{ upload.name }}</span>
+      <span class="progress-text">
+        <span *ngIf="upload.status === 'uploading'">{{ upload.progress }}%</span>
+        <span *ngIf="upload.status === 'complete'" style="color: #28a745;">
+          <i class="fas fa-check"></i> Complete
+        </span>
+        <span *ngIf="upload.status === 'error'" style="color: #dc3545;">
+          <i class="fas fa-times"></i> Failed
+        </span>
+      </span>
     </div>
     <div class="progress-bar">
-      <div class="progress" [style.width.%]="file.progress"></div>
+      <div class="progress" 
+           [style.width.%]="upload.progress"
+           [class.complete]="upload.status === 'complete'"
+           [class.error]="upload.status === 'error'">
+      </div>
     </div>
   </div>
-</div> 
+</div>

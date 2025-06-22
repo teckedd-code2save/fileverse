@@ -115,15 +115,22 @@ import { HttpEventType, HttpEvent } from '@angular/common/http';
       transition: width 0.3s ease;
       border-radius: 3px;
     }
+
+    .progress.complete {
+      background: #28a745;
+    }
+
+    .progress.error {
+      background: #dc3545;
+    }
   `]
 })
 export class FileUploadComponent {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
-
   private fileService = inject(FileService);
   isDragging = false;
-  uploadingFiles: Array<{ name: string; progress: number }> = [];
+  uploadingFiles: Array<{ name: string; progress: number; status: 'uploading' | 'complete' | 'error' }> = [];
 
   onDragOver(event: DragEvent): void {
     event.preventDefault();
@@ -168,24 +175,55 @@ export class FileUploadComponent {
   }
 
   private uploadFile(file: File): void {
-    const uploadFile = { name: file.name, progress: 0 };
+    const uploadFile = { name: file.name, progress: 0, status: 'uploading' as const };
     this.uploadingFiles.push(uploadFile);
 
     this.fileService.uploadFile(file).subscribe({
       next: (event: HttpEvent<any>) => {
         if (event.type === HttpEventType.UploadProgress) {
           const progress = Math.round(100 * event.loaded / (event.total || event.loaded));
-          uploadFile.progress = progress;
+          this.updateFileProgress(uploadFile.name, progress);
+          console.log('Upload progress:', progress);
         } else if (event.type === HttpEventType.Response) {
+          this.updateFileProgress(uploadFile.name, 100);
+          this.updateFileStatus(uploadFile.name, 'complete');
+          console.log('Upload complete:', event.body);
+          
+          // Remove completed upload after 2 seconds
           setTimeout(() => {
-            this.uploadingFiles = this.uploadingFiles.filter(f => f !== uploadFile);
-          }, 1000);
+            this.removeUploadFile(uploadFile.name);
+          }, 2000);
         }
       },
       error: (error) => {
         console.error('Upload failed:', error);
-        this.uploadingFiles = this.uploadingFiles.filter(f => f !== uploadFile);
+        this.updateFileStatus(uploadFile.name, 'error');
+        
+        // Remove failed upload after 3 seconds
+        setTimeout(() => {
+          this.removeUploadFile(uploadFile.name);
+        }, 3000);
       }
     });
+  }
+
+  private updateFileProgress(fileName: string, progress: number): void {
+    this.uploadingFiles = this.uploadingFiles.map(f => 
+      f.name === fileName ? { ...f, progress } : f
+    );
+  }
+
+  private updateFileStatus(fileName: string, status: 'uploading' | 'complete' | 'error'): void {
+    this.uploadingFiles = this.uploadingFiles.map(f => 
+      f.name === fileName ? { ...f, status } : f
+    );
+  }
+
+  private removeUploadFile(fileName: string): void {
+    this.uploadingFiles = this.uploadingFiles.filter(f => f.name !== fileName);
+  }
+
+  trackByFileName(index: number, upload: any): string {
+    return upload.name;
   }
 } 
