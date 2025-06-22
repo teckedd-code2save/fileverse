@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FileService } from '../../services/file.service';
 import { FileSizePipe } from '../../pipes/file-size.pipe';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, map } from 'rxjs';
 
 @Component({
   selector: 'app-gallery',
@@ -236,9 +236,32 @@ export class GalleryComponent implements OnInit {
   }
 
   loadFiles() {
-    // Create observable from the service call
-    this.files$ = this.fileService.searchFiles("");
-    console.log("files$",this.files$)
+    // Create observable from the service call and sort by created_at in descending order
+    this.files$ = this.fileService.searchFiles("").pipe(
+      map(files => {
+        if (Array.isArray(files)) {
+          return files.sort((a, b) => {
+            const dateA = new Date(a.created_at || 0);
+            const dateB = new Date(b.created_at || 0);
+            return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
+          });
+        } else if (files && files.items) {
+          return files.items.sort((a: any, b: any) => {
+            const dateA = new Date(a.created_at || 0);
+            const dateB = new Date(b.created_at || 0);
+            return dateB.getTime() - dateA.getTime();
+          });
+        } else if (files && files.results) {
+          return files.results.sort((a: any, b: any) => {
+            const dateA = new Date(a.created_at || 0);
+            const dateB = new Date(b.created_at || 0);
+            return dateB.getTime() - dateA.getTime();
+          });
+        }
+        return [];
+      })
+    );
+    console.log("files$", this.files$);
   }
 
   isImage(filename: string): boolean {
