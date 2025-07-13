@@ -30,9 +30,9 @@ class S3Service:
                 temp_file.flush()
 
                 # Upload to S3
-                file_key = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
+                file_key = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{sanitized(file.filename)}"
                 self.s3_client.upload_file(
-                    temp_file.name,
+                    sanitized(temp_file.name),
                     self.bucket_name,
                     file_key,
                     ExtraArgs={'ContentType': file.content_type}
@@ -88,6 +88,21 @@ class S3Service:
                 return temp_file.name
         except Exception as e:
             raise Exception(f"Error downloading file: {str(e)}")
+        
+    async def get_file_metadata(self, file_id: str) -> dict:
+        """
+        Get metadata of a file in S3
+        """
+        try:
+            response = self.s3_client.head_object(Bucket=self.bucket_name, Key=file_id)
+            return {
+                "filename": file_id,
+                "size": response['ContentLength'],
+                "content_type": response['ContentType'],
+                "last_modified": response['LastModified'].isoformat()
+            }
+        except Exception as e:
+            raise Exception(f"Error retrieving file metadata: {str(e)}")
 
     async def delete_file(self, file_key: str) -> None:
         """
@@ -100,3 +115,7 @@ class S3Service:
             )
         except Exception as e:
             raise Exception(f"Error deleting file: {str(e)}") 
+        
+def sanitized(filename: str) -> str:
+    # Remove all spaces and convert to lowercase
+    return filename.replace(' ', '').lower()
