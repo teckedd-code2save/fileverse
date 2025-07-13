@@ -1,15 +1,37 @@
-# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
+# Frontend
 # Compiled output
-/dist
-/tmp
-/out-tsc
-/bazel-out
+/frontend-new/dist
+/frontend-new/tmp
+/frontend-new/out-tsc
+/frontend-new/bazel-out
 
 # Node
-/node_modules
-npm-debug.log
-yarn-error.log
+/frontend-new/node_modules
+/frontend-new/npm-debug.log
+/frontend-new/yarn-error.log
+
+
+# Miscellaneous
+/frontend-new/.angular/cache
+/frontend-new/.sass-cache/
+/frontend-new/connect.lock
+/frontend-new/coverage
+/frontend-new/libpeerconnection.log
+/frontend-new/testem.log
+/frontend-new/typings
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Backend
+/backend/__pycache__/
+/backend/.venv/
+/backend/build/
+/backend/dist/
+/backend/wheels/
+/backend/*.egg-info/
 
 # IDEs and editors
 .idea/
@@ -28,15 +50,3 @@ yarn-error.log
 !.vscode/extensions.json
 .history/*
 
-# Miscellaneous
-/.angular/cache
-.sass-cache/
-/connect.lock
-/coverage
-/libpeerconnection.log
-testem.log
-/typings
-
-# System files
-.DS_Store
-Thumbs.db

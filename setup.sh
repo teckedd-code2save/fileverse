@@ -18,7 +18,7 @@ uv pip install -e .
 
 echo "Installing AWS CLI for AWS..."
 
-uv pip install awscli-local[ver1] 
+uv pip install "awscli-local[ver1]"
 
 
 echo "Setting up AWS CLI..."
