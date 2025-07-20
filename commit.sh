@@ -36,6 +36,8 @@ Thumbs.db
 /backend/dist/
 /backend/wheels/
 /backend/*.egg-info/
+/backend/.env.local
+
 
 # IDEs and editors
 .idea/
