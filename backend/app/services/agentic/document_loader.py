@@ -5,7 +5,7 @@ from langchain_community.document_loaders.parsers import TesseractBlobParser
 from langchain_core.documents import Document
 import bs4
 from io import BytesIO
-from schemas.agentic import DocumentLoaderConfig, WebConfig, FileConfig, TextConfig
+from app.schemas.agentic import DocumentLoaderConfig, WebConfig, FileConfig, TextConfig
 from typing import Literal
 
 class DocumentLoaderFactory:
@@ -68,4 +68,4 @@ class DocumentLoaderFactory:
         Load documents using the appropriate loader based on configuration.
         """
         loader = await DocumentLoaderFactory.create_loader(config)
-        return await loader.load()
+        return  loader.load()

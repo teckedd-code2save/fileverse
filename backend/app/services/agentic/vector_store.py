@@ -3,7 +3,7 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
 from langchain_core.embeddings import Embeddings
-from schemas import VectorStoreConfig
+from app.schemas.agentic import VectorStoreConfig
 from typing import Union
 
 class VectorStoreFactory:
@@ -19,7 +19,7 @@ class VectorStoreFactory:
             if not config.pineconeConfig:
                 raise ValueError("Pinecone config required for Pinecone store")
             
-            pinecone = Pinecone()  # Assumes API key is set via environment variable PINECONE_API_KEY
+            pinecone = Pinecone(api_key=...)  # Assumes API key is set via environment variable PINECONE_API_KEY
             existing_indexes = [index_info["name"] for index_info in pinecone.list_indexes()]
             if config.pineconeConfig.indexName not in existing_indexes:
                 pinecone.create_index(

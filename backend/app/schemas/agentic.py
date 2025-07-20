@@ -31,7 +31,7 @@ class LLMConfig(BaseModel):
     temperature: float
 
 class EmbeddingsConfig(BaseModel):
-    provider: Literal['mistral', 'openai']
+    provider: Literal['mistralai', 'openai', 'huggingface']
     model: str
 
 class ChunkingConfig(BaseModel):

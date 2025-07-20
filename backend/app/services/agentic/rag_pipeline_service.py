@@ -1,15 +1,17 @@
 from langchain_mistralai import ChatMistralAI
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.utils.hub import pull
-from langgraph.graph import StateGraph
+from langchain.hub import pull
+from langgraph.graph import StateGraph, START
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from document_loader import DocumentLoaderFactory
-from vector_store import VectorStoreFactory
-from embeddings_factory import EmbeddingsFactory
-from schemas import RAGConfig, RAGResponse, DocumentLoaderConfig
+from langchain.chat_models import init_chat_model
+from app.services.agentic.document_loader import DocumentLoaderFactory
+from app.services.agentic.vector_store import VectorStoreFactory
+from app.services.agentic.embeddings_factory import EmbeddingsFactory
+from app.schemas.agentic import RAGConfig, RAGResponse, DocumentLoaderConfig
 from typing import List, TypedDict
 import time
+import asyncio
 
 class RAGPipeline:
     def __init__(self, config: RAGConfig):
@@ -17,11 +19,12 @@ class RAGPipeline:
         Initialize the RAG pipeline with the given configuration.
         """
         self.config = config
-        self.llm = ChatMistralAI(
-            model=config.llm.model,
-            temperature=config.llm.temperature
+        # Corrected to use llm config fields
+        self.llm = init_chat_model(
+            model=self.config.llm.model,
+            model_provider="mistralai"
         )
-        self.embeddings = None  # Initialized in initialize()
+        self.embeddings = None
         self.vector_store = None
         self.prompt_template = None
         self.graph = None
@@ -41,8 +44,8 @@ class RAGPipeline:
         # Load and process documents
         await self.load_and_index_documents()
 
-        # Load prompt template
-        self.prompt_template = await pull("rlm/rag-prompt")
+        # Load prompt template asynchronously
+        self.prompt_template =  pull("rlm/rag-prompt")
 
         # Build the graph
         self._build_graph()
@@ -56,7 +59,7 @@ class RAGPipeline:
             chunk_size=self.config.chunking.chunkSize,
             chunk_overlap=self.config.chunking.chunkOverlap
         )
-        all_splits = await splitter.split_documents(docs)
+        all_splits = splitter.split_documents(docs)  # Synchronous call
         await self.add_split_documents(all_splits)
         print(f"✅ Indexed {len(all_splits)} document chunks")
 
@@ -64,39 +67,30 @@ class RAGPipeline:
         """
         Build the LangGraph for the RAG pipeline.
         """
-        # Define state annotations
-        class InputState(TypedDict):
-            question: str
-
-        class RAGState(TypedDict):
+        class State(TypedDict):
             question: str
             context: List[Document]
             answer: str
 
         # Define application steps
-        async def retrieve(state: InputState) -> dict:
-            retrieved_docs = await self.vector_store.similarity_search(state["question"], k=4)
+        async def retrieve(state: State) -> dict:
+            retrieved_docs =  self.vector_store.similarity_search(state["question"], k=4)
             return {"context": retrieved_docs}
 
-        async def generate(state: RAGState) -> dict:
+        async def generate(state: State) -> dict:
             docs_content = "\n\n".join(doc.page_content for doc in state["context"])
-            messages = await self.prompt_template.invoke({
+            messages =  self.prompt_template.invoke({
                 "question": state["question"],
                 "context": docs_content
             })
-            response = await self.llm.invoke(messages)
+            response = await self.llm.ainvoke(messages)
             return {"answer": response.content}
 
         # Compile the graph
-        self.graph = (
-            StateGraph(RAGState)
-            .add_node("retrieve", retrieve)
-            .add_node("generate", generate)
-            .add_edge("__start__", "retrieve")
-            .add_edge("retrieve", "generate")
-            .add_edge("generate", "__end__")
-            .compile()
-        )
+        graph_builder = StateGraph(State).add_sequence([retrieve, generate])
+        graph_builder.add_edge(START, "retrieve")
+        self.graph = graph_builder.compile()
+        print("✅ RAG pipeline graph built successfully")
 
     async def query(self, question: str) -> RAGResponse:
         """
@@ -104,7 +98,8 @@ class RAGPipeline:
         """
         start_time = time.time()
         try:
-            result = await self.graph.invoke({"question": question})
+            # Use ainvoke for async graph execution
+            result = await self.graph.ainvoke({"question": question})
             processing_time = time.time() - start_time
             return RAGResponse(
                 answer=result["answer"],
@@ -121,7 +116,9 @@ class RAGPipeline:
         """
         Add split documents to the vector store.
         """
-        await self.vector_store.add_documents(docs)
+        # Run synchronous add_documents in a thread pool
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, lambda: self.vector_store.add_documents(docs))
         print(f"✅ Added {len(docs)} new document chunks")
 
     async def add_new_documents(self, config: DocumentLoaderConfig) -> None:
@@ -133,6 +130,6 @@ class RAGPipeline:
             chunk_size=self.config.chunking.chunkSize,
             chunk_overlap=self.config.chunking.chunkOverlap
         )
-        all_splits = await splitter.split_documents(docs)
+        all_splits = splitter.split_documents(docs)  # Synchronous call
         await self.add_split_documents(all_splits)
         print(f"✅ Added {len(all_splits)} new document chunks")

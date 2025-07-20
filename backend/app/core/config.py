@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 from typing import List
+import os
+import getpass
 
 class Settings(BaseSettings):
     # API Configuration
@@ -36,6 +38,12 @@ class Settings(BaseSettings):
     
     # Cache Configuration
     REDIS_URL: str = "redis://localhost:6379"
+
+    # Chat models api keys
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "your-openai-api-key")
+    XAI_API_KEY: str = os.getenv("XAI_API_KEY", "your-xai-api-key")
+    MIsTRAL_API_KEY: str = os.getenv("MISTRAL_API_KEY", "your-mistral-api-key")
+
     
     class Config:
         env_file = ".env"
